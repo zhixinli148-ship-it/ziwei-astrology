@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f7f4ff">
+<meta name="description" content="紫微斗数排盘与命盘解读，输入生辰即出命盘">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="紫微斗数">
+<title>紫微斗数 · 排盘</title>
+<style>
+:root{
+  --ink:#2a2440; --ink2:#6b6285; --ink3:#9d96b0;
+  --gold:#a8842f; --gold2:#c9a959; --purple:#6d5ba8;
+  --glass:rgba(255,255,255,.56);
+  --glass2:rgba(255,255,255,.38);
+  --brd:rgba(255,255,255,.75);
+  --brd2:rgba(120,100,170,.14);
+  --r:16px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  color:var(--ink);
+  min-height:100vh;
+  background:
+    radial-gradient(1100px 620px at 8% -8%, #e6ddff 0%, transparent 58%),
+    radial-gradient(900px 520px at 102% 2%, #fdf0d2 0%, transparent 55%),
+    radial-gradient(1000px 700px at 48% 112%, #dcecff 0%, transparent 58%),
+    linear-gradient(165deg,#fbfaff 0%,#f6f3ff 100%);
+  background-attachment:fixed;
+  padding:22px 16px 48px;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1000px;margin:0 auto}
+
+/* ---------- 顶部 ---------- */
+.hero{text-align:center;margin:6px 0 22px}
+.hero h1{
+  font-size:30px;letter-spacing:.34em;margin:0 0 8px;font-weight:600;
+  background:linear-gradient(100deg,#4a3d7a,#a8842f 55%,#6d5ba8);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.hero p{margin:0;font-size:13px;color:var(--ink3);letter-spacing:.14em}
+
+/* ---------- 毛玻璃 ---------- */
+.glass{
+  background:var(--glass);
+  backdrop-filter:blur(20px) saturate(180%);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);
+  border:1px solid var(--brd);
+  border-radius:var(--r);
+  box-shadow:0 8px 30px rgba(92,72,150,.09), inset 0 1px 0 rgba(255,255,255,.7);
+}
+
+/* ---------- 表单 ---------- */
+.form{padding:18px;margin-bottom:18px}
+.seg{display:inline-flex;padding:3px;border-radius:11px;background:rgba(120,100,170,.09);margin-bottom:16px}
+.seg button{
+  border:0;background:transparent;padding:7px 20px;border-radius:9px;
+  font-size:13.5px;color:var(--ink2);cursor:pointer;font-family:inherit;transition:.18s;
+}
+.seg button.on{background:#fff;color:var(--purple);font-weight:600;box-shadow:0 2px 8px rgba(92,72,150,.13)}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.fields label{display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--ink2);letter-spacing:.04em}
+.fields input[type=date],.fields select{
+  font-family:inherit;font-size:14.5px;color:var(--ink);
+  padding:10px 11px;border-radius:11px;
+  border:1px solid rgba(120,100,170,.18);
+  background:rgba(255,255,255,.72);
+  outline:none;transition:.18s;width:100%;
+}
+.fields input:focus,.fields select:focus{border-color:rgba(109,91,168,.55);box-shadow:0 0 0 3px rgba(109,91,168,.11)}
+.leap-row{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--ink2);margin-bottom:14px}
+.leap-row input{width:15px;height:15px;accent-color:var(--purple)}
+.hint{
+  display:none;margin:0 0 14px;padding:9px 12px;border-radius:10px;
+  font-size:12px;line-height:1.75;color:#8a6a1f;
+  background:rgba(200,170,90,.13);border:1px solid rgba(200,170,90,.28);
+}
+.hint.on{display:block}
+.go{
+  width:100%;padding:13px;border:0;border-radius:12px;cursor:pointer;
+  font-family:inherit;font-size:15px;font-weight:600;letter-spacing:.24em;color:#fff;
+  background:linear-gradient(100deg,#6d5ba8,#8a76c9 50%,#a8842f);
+  box-shadow:0 6px 20px rgba(109,91,168,.3);
+  transition:.2s;
+}
+.go:hover{transform:translateY(-1px);box-shadow:0 9px 26px rgba(109,91,168,.38)}
+.go:active{transform:translateY(0)}
+.err{color:#c0392b;font-size:13px;margin:10px 0 0;text-align:center}
+
+/* ---------- 命盘 ---------- */
+#result{display:none}
+#result.on{display:block;animation:up .5s ease both}
+@keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.chart{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  grid-template-rows:repeat(4,minmax(112px,1fr));
+  gap:7px;
+  padding:12px;
+  margin-bottom:16px;
+}
+.palace{
+  position:relative;
+  padding:9px 10px 8px;
+  border-radius:12px;
+  background:rgba(255,255,255,.46);
+  border:1px solid rgba(255,255,255,.66);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  transition:.22s;
+}
+.palace:hover{background:rgba(255,255,255,.66)}
+.palace.ming{border-color:rgba(168,132,47,.5);background:rgba(255,250,235,.62)}
+.palace.ming .pname{color:var(--gold);font-weight:700}
+.palace.liunian{box-shadow:inset 0 0 0 2px rgba(109,91,168,.62)}
+.palace.liunian .p-head{padding-right:38px}
+.palace.empty{border-style:dashed;border-color:rgba(120,100,170,.34)}
+.ln-tag{
+  position:absolute;top:0;right:0;font-size:9px;color:#fff;letter-spacing:.06em;
+  background:linear-gradient(120deg,#6d5ba8,#8a76c9);
+  padding:2px 6px;border-radius:0 11px 0 10px;
+}
+.empty-tag{font-size:9.5px;color:#a8842f;background:rgba(200,170,90,.16);padding:1px 5px;border-radius:5px;line-height:1.5}
+.p-head{display:flex;align-items:baseline;justify-content:space-between;gap:4px;margin-bottom:5px}
+.pname{font-size:12.5px;color:var(--ink2);letter-spacing:.05em}
+.pganzhi{font-size:10.5px;color:var(--ink3);letter-spacing:.02em}
+.p-stars{display:flex;flex-wrap:wrap;gap:3px 6px;align-content:flex-start;flex:1}
+.p-foot{display:flex;justify-content:space-between;align-items:center;margin-top:4px;font-size:10px;color:var(--ink3)}
+.p-foot .dec i{font-style:normal;opacity:.72;margin-right:2px}
+.body-tag{color:#c0392b;font-size:10px}
+
+.star{font-size:12.5px;line-height:1.35;white-space:nowrap}
+.star.major{font-size:13.5px;font-weight:600;color:#3d3266}
+.star.minor{font-size:11.5px;color:var(--ink2)}
+.star.good{font-size:11.5px;color:#2f7d6a}
+.star.bad{font-size:11.5px;color:#b4553f}
+.br{font-style:normal;font-size:9.5px;color:var(--ink3);margin-left:1px}
+.star.strong{color:#8a5a12}
+.star.strong .br{color:#b08030}
+.star.weak{color:#a9a3b8;font-weight:400}
+.hua{
+  display:inline-block;font-size:9px;font-weight:700;line-height:1;
+  padding:2px 3px;border-radius:4px;margin-left:2px;vertical-align:1px;color:#fff;
+}
+.hua-禄{background:#3f9e7c}.hua-权{background:#4a7fc1}.hua-科{background:#b8933f}.hua-忌{background:#c25a4a}
+
+/* 中宫 */
+.center{
+  grid-area:2/2/4/4;
+  border-radius:12px;
+  background:rgba(255,255,255,.5);
+  border:1px solid rgba(255,255,255,.7);
+  padding:12px 14px;
+  display:flex;flex-direction:column;justify-content:center;gap:7px;
+  text-align:center;
+}
+.c-title{font-size:15px;font-weight:600;color:var(--purple);letter-spacing:.2em}
+.c-sub{font-size:11.5px;color:var(--ink3);line-height:1.7}
+.c-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px 10px;font-size:11.5px;text-align:left;margin-top:2px}
+.c-grid div{display:flex;justify-content:space-between;gap:6px;color:var(--ink2)}
+.c-grid b{color:var(--ink);font-weight:600}
+.c-ln{font-size:11px;color:var(--ink2);margin-top:3px}
+.c-hua{display:flex;justify-content:center;gap:5px;flex-wrap:wrap;margin-top:3px}
+.c-hua span{font-size:10.5px;padding:3px 7px;border-radius:7px;background:rgba(255,255,255,.8);border:1px solid var(--brd2)}
+
+/* 命盘评价 */
+.verdict{padding:24px 22px 20px;margin-bottom:18px;text-align:center;display:none}
+.verdict.on{display:block;animation:up .5s ease both}
+.vd-label{font-size:11.5px;color:var(--ink3);letter-spacing:.3em;margin-bottom:12px}
+.vd-main{font-size:54px;font-weight:700;letter-spacing:.1em;line-height:1.05;margin-bottom:8px}
+.vd-main.long{font-size:39px}
+.vd-main.t0{color:#b8892f;text-shadow:0 2px 20px rgba(184,137,47,.25)}
+.vd-main.t1{color:#6d5ba8;text-shadow:0 2px 20px rgba(109,91,168,.22)}
+.vd-main.t2{color:#8b8b9c}
+.vd-main.t3{color:#a2856f}
+.vd-score{font-size:12.5px;color:var(--ink3);margin-bottom:12px;letter-spacing:.06em}
+.vd-score b{font-size:21px;color:var(--ink);font-weight:600;margin-right:1px}
+.vd-bar{height:5px;border-radius:3px;background:rgba(120,100,170,.13);overflow:hidden;max-width:320px;margin:0 auto 16px}
+.vd-bar i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,#8a76c9,#c9a959);transition:width .8s ease}
+.vd-why{font-size:13px;line-height:1.95;color:#453d5c;text-align:left;max-width:580px;margin:0 auto 14px}
+.vd-line{font-size:12.5px;color:var(--ink2);line-height:1.8;max-width:580px;margin:0 auto 18px;padding-top:12px;border-top:1px dashed rgba(120,100,170,.2)}
+.vd-again{
+  font-family:inherit;font-size:13.5px;color:var(--purple);cursor:pointer;
+  padding:9px 24px;border-radius:11px;border:1px solid rgba(109,91,168,.3);
+  background:rgba(255,255,255,.6);transition:.18s;
+}
+.vd-again:hover{background:#fff;box-shadow:0 4px 14px rgba(109,91,168,.16)}
+
+/* 解读 */
+.readings{display:grid;gap:11px;margin-bottom:16px}
+.rd{padding:16px 18px}
+.rd-head{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:9px}
+.rd-title{font-size:14px;font-weight:600;color:var(--purple);letter-spacing:.1em}
+.rd-badge{
+  font-size:11px;padding:2.5px 9px;border-radius:7px;
+  background:rgba(168,132,47,.15);color:#8a6a1f;letter-spacing:.03em;
+}
+.rd-badge.p{background:rgba(109,91,168,.14);color:#5c4d94}
+.rd-body{font-size:13.5px;line-height:1.9;color:#453d5c}
+.rd-body b{color:#3d3266;font-weight:600}
+.rd-body em{font-style:normal;color:#8a6a1f;font-weight:600}
+.rd-body .warn{color:#b4553f}
+.rd-body .good{color:#2f7d6a}
+.rd-note{
+  font-size:12px;line-height:1.7;color:var(--ink3);
+  margin-top:9px;padding-top:9px;border-top:1px dashed rgba(120,100,170,.2);
+}
+.rd-disc{font-size:11.5px;color:var(--ink3);text-align:center;line-height:1.7;padding:0 6px}
+
+/* 四化条目 */
+.hua-sec{
+  font-size:12.5px;font-weight:600;color:var(--purple);letter-spacing:.08em;
+  margin:15px 0 11px;padding-bottom:7px;border-bottom:1px solid rgba(120,100,170,.16);
+}
+.hua-sec:first-child{margin-top:0}
+.hua-item{margin-bottom:14px;padding-left:11px;border-left:2px solid rgba(168,132,47,.38)}
+.hua-item:last-child{margin-bottom:0}
+.hua-t{display:flex;align-items:baseline;gap:8px;margin-bottom:4px;flex-wrap:wrap}
+.hua-t b{font-size:13.5px;color:#3d3266;letter-spacing:.02em}
+.hua-t span{font-size:11.5px;color:#8a6a1f;background:rgba(200,170,90,.15);padding:1px 7px;border-radius:6px}
+.hua-b{font-size:13px;line-height:1.88;color:#4a4260}
+
+/* 说明条 */
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.note{padding:14px 16px}
+.note h3{margin:0 0 8px;font-size:13px;color:var(--purple);letter-spacing:.1em;font-weight:600}
+.note p{margin:0;font-size:12.5px;line-height:1.75;color:var(--ink2)}
+.legend{display:flex;flex-wrap:wrap;gap:9px;font-size:11.5px;color:var(--ink2);margin-top:8px}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:1px}
+
+@media(max-width:640px){
+  body{padding:14px 10px 34px}
+  .hero h1{font-size:23px;letter-spacing:.26em}
+  .vd-main{font-size:42px}
+  .vd-main.long{font-size:28px}
+  .verdict{padding:20px 16px 18px}
+  .chart{gap:5px;padding:8px;grid-template-rows:repeat(4,minmax(96px,1fr))}
+  .palace{padding:6px 7px;border-radius:10px}
+  .p-stars{gap:2px 4px}
+  .p-foot .dec i{display:none}
+  .p-foot .cs{display:none}
+  .ln-tag{display:none}
+  .palace.liunian .p-head{padding-right:0}
+  .palace.liunian{box-shadow:inset 0 0 0 3px rgba(109,91,168,.72)}
+  .pname{font-size:11px}
+  .star.major{font-size:12px}
+  .star{font-size:11px}
+  .star.minor,.star.good,.star.bad{font-size:10px}
+  .center{padding:8px}
+  .c-title{font-size:13px}
+  .c-grid{font-size:10px;gap:3px 6px}
+  .c-sub{font-size:10px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <h1>紫微斗数</h1>
+    <p>输入生辰 · 起一张命盘</p>
+  </header>
+
+  <div id="formWrap">
+  <form class="glass form" id="form">
+    <div class="seg" id="seg">
+      <button type="button" class="on" data-cal="solar">公历</button>
+      <button type="button" data-cal="lunar">农历</button>
+    </div>
+    <div class="fields">
+      <label>出生日期<input type="date" id="date" required></label>
+      <label>出生时辰<select id="hour"></select></label>
+      <label>性别<select id="gender"><option>男</option><option>女</option></select></label>
+    </div>
+    <div class="leap-row" id="leapRow" style="display:none">
+      <input type="checkbox" id="leap"><label for="leap" style="cursor:pointer">该月为闰月</label>
+    </div>
+    <p class="hint" id="hourHint">晚子时（23:00–00:00）按传统惯例归入<b>次日子时</b>排盘。若出生日期临近农历月末或闰月，建议再用次日早子时核对一次。</p>
+    <button class="go" type="submit">起 盘</button>
+    <p class="err" id="err" style="display:none"></p>
+  </form>
+  </div>
+
+  <div class="glass verdict" id="verdict"></div>
+
+  <section id="result">
+    <div class="glass chart" id="chart"></div>
+    <div class="readings" id="readings"></div>
+    <div class="notes">
+      <div class="glass note">
+        <h3>怎么看</h3>
+        <p><b>命宫</b>是底色，看先天禀赋；<b>官禄宫</b>看事业路线，<b>财帛宫</b>看财运模式，<b>夫妻宫</b>看感情缘分。紫框是当下流年命宫，虚线框的<b>空宫</b>表示该宫无主星、需借对宫星曜参看。</p>
+        <div class="legend">
+          <span><i style="background:#3d3266"></i>主星</span>
+          <span><i style="background:#2f7d6a"></i>吉星</span>
+          <span><i style="background:#b4553f"></i>煞星</span>
+          <span><i style="background:#8a5a12"></i>庙旺（有力）</span>
+          <span><i style="background:#a9a3b8"></i>落陷（力弱）</span>
+        </div>
+      </div>
+      <div class="glass note">
+        <h3>四化</h3>
+        <p>禄主财与顺遂，权主权力与掌控，科主名声与文书，忌主阻碍与牵挂。生年四化是底色，流年四化是当年的着力点。</p>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script src="iztro.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  var TIME_LABELS = [
+    "子时 00:00-01:00","丑时 01:00-03:00","寅时 03:00-05:00","卯时 05:00-07:00",
+    "辰时 07:00-09:00","巳时 09:00-11:00","午时 11:00-13:00","未时 13:00-15:00",
+    "申时 15:00-17:00","酉时 17:00-19:00","戌时 19:00-21:00","亥时 21:00-23:00",
+    "子时 23:00-00:00"
+  ];
+  /* 地支 → CSS Grid 位置（传统命盘布局：寅起左下，顺时针） */
+  var GRID = {
+    "寅":[4,1],"卯":[3,1],"辰":[2,1],"巳":[1,1],
+    "午":[1,2],"未":[1,3],"申":[1,4],"酉":[2,4],
+    "戌":[3,4],"亥":[4,4],"子":[4,3],"丑":[4,2]
+  };
+  var STRONG = ["庙","旺"], WEAK = ["平","不","陷"];
+  var CAL = "solar";
+
+  var $ = function(id){ return document.getElementById(id); };
+
+  /* ---- 时辰下拉 ---- */
+  var hourSel = $("hour");
+  TIME_LABELS.forEach(function(t,i){
+    var o = document.createElement("option");
+    o.value = i; o.textContent = t;
+    if(i === 1) o.selected = true;
+    hourSel.appendChild(o);
+  });
+
+  /* ---- 历法切换 ---- */
+  $("seg").addEventListener("click", function(e){
+    var b = e.target.closest("button"); if(!b) return;
+    CAL = b.dataset.cal;
+    [].forEach.call(this.querySelectorAll("button"), function(x){ x.classList.toggle("on", x === b); });
+    $("leapRow").style.display = (CAL === "lunar") ? "flex" : "none";
+  });
+
+  /* ---- 晚子时提示 ---- */
+  hourSel.addEventListener("change", function(){
+    $("hourHint").className = (this.value === "12") ? "hint on" : "hint";
+  });
+
+  /* ---- 星曜 ---- */
+  function starHTML(s){
+    var cls = "star ";
+    if(s.type === "major") cls += "major";
+    else if(s.type === "tough") cls += "bad";
+    else if(s.type === "soft" || s.type === "lucun" || s.type === "tianma") cls += "good";
+    else cls += "minor";
+    if(s.type === "major" && STRONG.indexOf(s.brightness) > -1) cls += " strong";
+    if(s.type === "major" && WEAK.indexOf(s.brightness) > -1) cls += " weak";
+    var h = '<span class="' + cls + '">' + s.name;
+    if(s.brightness) h += '<i class="br">' + s.brightness + '</i>';
+    h += "</span>";
+    if(s.mutagen) h += '<b class="hua hua-' + s.mutagen + '">' + s.mutagen + "</b>";
+    return h;
+  }
+
+  /* ===================== 解读文案库 ===================== */
+  /* 宫位名：iztro 只有「命宫」自带宫字，其余不带 */
+  function palaceLabel(n){ return n === "命宫" ? "命宫" : n + "宫"; }
+
+  var STAR_DB = {
+    "紫微": { role:"帝星",
+      soul:"自尊心强，不愿居人之下，天生带一股领袖气场——<b>走进房间不用说话，别人就自动给你让座</b>。做什么都希望自己是拿主意的那个。",
+      risk:"孤高、好面子，累的时候也硬扛，不太愿意示弱求人。",
+      career:"适合带团队或自己当老板，长期听人指挥会很憋屈。",
+      wealth:"赚钱格局大，看不上小钱，但容易在琐碎细节上漏财。",
+      love:"感情里要的是被尊重，对方压不住你，你就提不起兴趣。" },
+    "天机": { role:"谋士星",
+      soul:"脑子转得飞快，一件事能推演出三种走向——<b>像个永远在想「下一步怎么办」的军师</b>。擅长分析、策划、找漏洞。",
+      risk:"想得多做得少，容易变卦，焦虑是常态。",
+      career:"适合策划、咨询、技术这类靠脑子吃饭的活，纯执行的岗位会浪费你。",
+      wealth:"靠信息和脑力变现，但决策容易反复，错过窗口期。",
+      love:"需要能跟上你思路的人，太闷的对象你会很快无聊。" },
+    "太阳": { role:"光明星",
+      soul:"热情、大方、有感染力——<b>像永远在发光发热，照亮别人但自己会累</b>。天生愿意为别人扛事。",
+      risk:"过度付出，爱面子不愿求助，容易把自己耗干。",
+      career:"适合公众性强的工作：教育、媒体、销售、带团队。",
+      wealth:"财来得热闹去得也热闹，花在人情上的钱不少。",
+      love:"付出型，但要小心变成单方面燃烧。" },
+    "武曲": { role:"财星·将星",
+      soul:"务实、果断、有魄力——<b>说干就干，不废话</b>。认准了就直接上，不喜欢绕弯子。",
+      risk:"太刚硬，不擅长表达感情，容易有孤独感。",
+      career:"执行力强，适合需要硬碰硬出成绩的岗位，或者自己创业。",
+      wealth:"财运扎实，但基本靠一双手拼出来，不是躺赚型。",
+      love:"感情里话少，靠行动表达，容易被误解成不在乎。" },
+    "天同": { role:"福星",
+      soul:"温和、乐观、人缘好——<b>那种「差不多就行了，何必那么累」的生活家</b>。不喜欢跟人争。",
+      risk:"容易满足现状，进取心需要外力推一把。",
+      career:"适合服务型、协作型工作，硬卷的赛道你会很难受。",
+      wealth:"不缺钱花，但也不会为钱拼命，够用就好。",
+      love:"脾气好、能包容，是让人放松的那种伴侣。" },
+    "廉贞": { role:"囚星·桃花星",
+      soul:"个性鲜明、爱恨分明——<b>一旦爱上就全力以赴，一旦受伤就记一辈子</b>。有魅力，也有棱角。",
+      risk:"太执着，情绪起伏大，容易走极端。",
+      career:"适合创意、艺术、公关类工作，循规蹈矩的岗位会磨掉你。",
+      wealth:"财运有起伏，敢投敢赌，但要防情绪化决策。",
+      love:"感情浓烈，爱得深也伤得深，不容易将就。" },
+    "天府": { role:"库星·财星",
+      soul:"稳重、有包容力，善于积累——<b>那种家里有粮仓就不慌的踏实人</b>。不慌不忙，但心里有数。",
+      risk:"偏保守，机会来了容易先犹豫。",
+      career:"适合管理、财务、运营这类要稳的岗位，厚积薄发。",
+      wealth:"存钱能力强，财运稳定，但不太会赚快钱。",
+      love:"感情里可靠、有安全感，只是少了点惊喜。" },
+    "太阴": { role:"月亮星",
+      soul:"细腻、感性、内省——<b>像那种深夜写日记、对情绪很敏感的人</b>。感受力比一般人强很多。",
+      risk:"敏感，容易想多、容易累，情绪需要出口。",
+      career:"适合艺术、心理、设计、需要细心的活，也适合夜间节奏。",
+      wealth:"财运偏稳，靠细水长流积累，不动产缘不错。",
+      love:"温柔体贴，但需要对方给足情绪回应。" },
+    "贪狼": { role:"桃花星·欲望星",
+      soul:"多才多艺、好奇心重、欲望强——<b>什么都想学、什么都想试的探险家</b>，学什么都快。",
+      risk:"贪多嚼不烂，对平淡的事缺乏耐心。",
+      career:"适合多元化、需要社交和创意的工作，重复劳动会杀死你。",
+      wealth:"赚钱路子多，社交能变现，但花钱也随性。",
+      love:"桃花旺、选择多，难的是定下来。" },
+    "巨门": { role:"暗星·口舌星",
+      soul:"口才好、爱钻研、有怀疑精神——<b>像开会时总能提出尖锐问题的审计员</b>，能看到别人看不到的漏洞。",
+      risk:"好辩、多疑，说话直容易得罪人。",
+      career:"靠嘴吃饭：律师、教师、咨询、分析、销售都合适。",
+      wealth:"靠专业和口才变现，但要防口舌是非带来的损失。",
+      love:"沟通多，但也容易因为话赶话吵起来。" },
+    "天相": { role:"印星·辅佐星",
+      soul:"稳重、有原则、重信誉——<b>那种「交给你就放心」的行政总管</b>。做事有章法，不越线。",
+      risk:"太讲原则，有时缺主见，容易被当枪使。",
+      career:"适合做二把手、协调者、管理者，专业度是你的护城河。",
+      wealth:"财运稳，靠正财积累，不碰高风险。",
+      love:"体贴周到，但不太主动，需求容易被忽略。" },
+    "天梁": { role:"荫星",
+      soul:"正直、有长者风范——<b>朋友圈里永远在给别人出主意的那个</b>。天生愿意帮人、护人。",
+      risk:"爱说教，有时候管得太多。",
+      career:"适合教育、医疗、咨询、法律这类照顾人、指导人的行业。",
+      wealth:"财运不暴但稳，常有贵人相助，越到后面越宽裕。",
+      love:"感情里像照顾者，但别把伴侣当学生。" },
+    "七杀": { role:"将星·孤星",
+      soul:"果断、独立、有魄力——<b>敢一个人上战场的孤胆英雄</b>。不怕硬碰硬，怕的是被困住。",
+      risk:"太冲，容易独断，不太擅长合作。",
+      career:"适合独当一面、需要开疆拓土的位置，或者自己干。",
+      wealth:"敢拼敢赚，财来得猛，起伏也大。",
+      love:"强势直接，需要能接受你节奏的人。" },
+    "破军": { role:"耗星·变革星",
+      soul:"不安现状、敢于推倒重来——<b>天生的破局者，永远在推翻旧的、建新的</b>。",
+      risk:"破坏性强，容易冲动，稳定性差。",
+      career:"适合创业、改革、开拓新业务，守成会让你窒息。",
+      wealth:"财来财去，大起大落，要学会留一手。",
+      love:"感情波折多，但每次都能重新开始。" }
+  };
+
+  /* 双星同宫的化学反应 */
+  var PAIR_DB = {
+    "七杀|紫微":"帝星配将星——想清楚了立刻动手，但不太听得进劝。",
+    "紫微|破军":"帝星遇上改革者——敢打破旧摊子，但也容易推得太狠。",
+    "紫微|贪狼":"帝星带着欲望——野心和享受并存，要什么都要最好的。",
+    "天相|紫微":"帝星配印星——既有格局又懂分寸，是紫微系里最稳的一组。",
+    "天府|紫微":"帝王坐库——既有掌控力又懂积累，天生适合管资源。",
+    "天机|太阴":"谋士配月亮——脑子快又心思细，适合需要洞察力的活，但容易内耗。",
+    "巨门|天机":"谋士配口才——思辨力极强，善于发现问题，但话多也容易招是非。",
+    "天梁|天机":"谋士配长者——有智慧有原则，适合做咨询和顾问。",
+    "太阳|巨门":"光芒配口才——表达欲和说服力都强，适合靠说话吃饭。",
+    "太阳|天梁":"光芒配庇护——有担当、愿意扛事，天生的照顾者角色。",
+    "太阳|太阴":"日月同宫——性格里有明显的两面，白天一个样，夜里一个样。",
+    "天府|武曲":"财星双聚——最会管钱的一组，稳、实、能积累。",
+    "贪狼|武曲":"财星配欲望——物欲和赚钱动力都强，敢闯也敢花。",
+    "天相|武曲":"财星配印星——赚钱有章法，不冒险，靠专业和信用。",
+    "七杀|武曲":"将星双会——刚硬果决，行动力拉满，但柔性不足。",
+    "武曲|破军":"财星配变革——敢赌敢拼，财来得快去得也快。",
+    "天同|太阴":"福星配月亮——温和细腻，情绪丰富，适合慢节奏的生活。",
+    "巨门|天同":"福星配口才——有口福也有口舌，喜欢聊也容易拌嘴。",
+    "天梁|天同":"福星配荫星——有福气也有长辈缘，一生不缺人帮。",
+    "天府|廉贞":"魅力配库星——既有个性又懂分寸，是廉贞系里最稳的一组。",
+    "廉贞|贪狼":"双桃花同宫——魅力、才艺、欲望都强，人生热闹，但需要定性。",
+    "天相|廉贞":"魅力配原则——有个性但不失分寸，适合需要分寸感的创意工作。",
+    "七杀|廉贞":"囚星配将星——刚烈、认死理，一旦决定九头牛拉不回。",
+    "廉贞|破军":"囚星配变革——激烈、敢冲、不认命，人生起伏大但从不无聊。"
+  };
+
+  var BRIGHT_STRONG = ["庙","旺"], BRIGHT_WEAK = ["平","不","陷"];
+
+  /* ===== 四化解读素材 ===== */
+  var STAR_BRIEF = {
+    "紫微":"帝星，自尊心强、要主导权、格局大",
+    "天机":"谋士星，脑子快、善策划、易多变",
+    "太阳":"光明星，热情付出、爱扛事、顾面子",
+    "武曲":"财星兼将星，务实果断、行动力强",
+    "天同":"福星，温和随缘、重享受、不喜争",
+    "廉贞":"囚星兼桃花星，爱恨分明、有个性、执着",
+    "天府":"库星，稳重包容、善积累、偏保守",
+    "太阴":"月亮星，细腻感性、内省、感受力强",
+    "贪狼":"桃花星兼欲望星，多才多艺、好奇、欲望强",
+    "巨门":"暗星兼口舌星，口才好、爱钻研、多疑",
+    "天相":"印星，稳重有原则、重信誉、善配合",
+    "天梁":"荫星，有长者风范、正直、爱帮人",
+    "七杀":"将星兼孤星，果断独立、有魄力、不擅合作",
+    "破军":"耗星兼变革星，不安现状、敢破局、起伏大",
+    "文昌":"主文书、学术、考试",
+    "文曲":"主才艺、口才、桃花",
+    "左辅":"主贵人助力（偏男性贵人）",
+    "右弼":"主贵人助力（偏女性贵人）"
+  };
+
+  var PALACE_MEAN = {
+    "命宫":"你的性格底色与先天气质",
+    "兄弟":"手足与同辈，也包括合作伙伴",
+    "夫妻":"伴侣关系，以及你面对亲密关系的态度",
+    "子女":"子女与晚辈，也代表创造力和带团队的方式",
+    "财帛":"钱怎么来、怎么花，你的金钱观",
+    "疾厄":"身体与健康，还有你承受压力的方式",
+    "迁移":"出门在外的际遇，以及你给外人的印象",
+    "仆役":"朋友与人脉，也包括下属和跟随者",
+    "官禄":"事业与职位，以及你做事的方式",
+    "田宅":"家宅与不动产，你的生活空间",
+    "福德":"精神世界，你的享受方式和内心状态",
+    "父母":"长辈与上级，以及你得到的庇荫"
+  };
+
+  /* 四化 × 宫位：这个组合具体意味着什么 */
+  var HUA_IN_PALACE = {
+    "禄": {
+      "命宫":"你天生带一点「顺」的运气，做事容易有人帮衬。好处是路走得轻松，代价是容易缺危机感。",
+      "兄弟":"手足或同辈里有人能帮到你，合作起来顺。但太顺也容易让你疏于经营这段关系。",
+      "夫妻":"感情上不缺缘分，容易遇到对你好的人。要留意的是别把「被照顾」当成理所当然。",
+      "子女":"和子女或晚辈相处轻松，也说明你带团队有一套让人愿意跟的方式。",
+      "财帛":"钱来得相对轻松，可能有偏财或副业收入。要防「来得容易去得也快」。",
+      "疾厄":"体质底子不错、恢复力强。但别因此透支——底子好不等于用不完。",
+      "迁移":"出门在外有人照应，也容易碰上好机会。你适合多走动。",
+      "仆役":"人脉本身就是你的财，朋友多且愿意帮你。注意别把交情过度变现。",
+      "官禄":"工作上容易遇到好机会、好平台。但机会多也容易挑花眼。",
+      "田宅":"家宅安稳，不动产运不错，也代表家里给的支持比较足。",
+      "福德":"你的快乐阈值不高，容易满足，这是福气。留意别在舒适区待太久。",
+      "父母":"长辈缘好，容易得到提携。别把庇荫当成理所当然。"
+    },
+    "权": {
+      "命宫":"你天生要强，什么事都想自己拿主意。好处是主见强、推得动；代价是听不进劝、容易累。",
+      "兄弟":"在手足或同辈里你通常是拿主意那个，也可能因为太强势而和同辈较劲。",
+      "夫妻":"感情里你想主导节奏，容易和对方争「谁说了算」。要学着轮流让位。",
+      "子女":"你对子女或下属要求高、管得多。出发点是负责，但对方可能只感到压力。",
+      "财帛":"你对钱有掌控欲，喜欢自己管账。好处是不容易吃亏，代价是可能错过放手一搏的机会。",
+      "疾厄":"你会用身体去扛事，把「撑住」当常态。抗压强是真的，但身体不是无限的。",
+      "迁移":"在外你气场足、镇得住场，适合抛头露面。但别让人觉得太强势。",
+      "仆役":"在朋友圈里你习惯当组织者。好处是号召力强，代价是容易替别人操心。",
+      "官禄":"事业上你迟早要拿到主导权，适合做管理或自己干。长期听人指挥会憋屈。",
+      "田宅":"家里你说了算，也代表你在意居所的掌控感。留意别把家变成第二个办公室。",
+      "福德":"你对精神享受也有要求，不容易随便满足。好处是不将就，代价是难放松。",
+      "父母":"你和长辈之间容易有主导权的拉扯，或者长辈对你要求偏高。"
+    },
+    "科": {
+      "命宫":"你容易被人记住，也容易因为名声得到机会。适合靠专业和口碑立身。",
+      "兄弟":"同辈中你比较出挑，容易被看到，但也可能因此招来比较。",
+      "夫妻":"伴侣有涵养，或者你们的关系比较体面。也可能因为顾面子而回避真实问题。",
+      "子女":"子女或晚辈有才华，你也重视教育。适合用引导而非命令的方式带人。",
+      "财帛":"你的钱多半来自专业能力和口碑，不是投机。适合做长期积累。",
+      "疾厄":"你比较在意身体管理，也可能对健康信息格外敏感。别把正常波动当成病。",
+      "迁移":"在外名声不错，给人的印象得体。适合做需要露脸的行业。",
+      "仆役":"你的人脉偏「质量」而非「数量」，容易结识有分量的人。",
+      "官禄":"事业上容易获得认可、职称、奖项。适合走专业声望路线。",
+      "田宅":"家里整洁有序，也代表你在意居住品质，可能因为房子带来名声。",
+      "福德":"精神世界丰富，有品味、懂生活。好处是自得其乐，代价是可能清高。",
+      "父母":"长辈有学识或声望，你也容易得到师长提携。"
+    },
+    "忌": {
+      "命宫":"你容易跟自己较劲，想得多、放不下。这是最需要修炼的地方——但也正是成长最大的地方。",
+      "兄弟":"和手足或同辈之间容易有牵挂或心结，也可能因为合作吃过亏。",
+      "夫妻":"感情是你最放不下的一块，容易反复。学着不过度解读对方的每个动作。",
+      "子女":"你会为子女或下属操心，也可能因为带人的方式而受挫。",
+      "财帛":"钱是你焦虑的来源之一，容易在这上面反复。建立规则比凭感觉更管用。",
+      "疾厄":"身体是你最需要留意的领域，压力容易在这里显形。别硬扛，定期检查。",
+      "迁移":"出门在外容易遇到波折，或者换个环境就放不下原来的人和事。",
+      "仆役":"朋友或下属容易让你操心，也容易在人际上吃亏。交人要慢。",
+      "官禄":"事业上容易反复，或者对工作过度投入。这是你要花力气处理的课题。",
+      "田宅":"家宅或房产方面容易有牵挂，也可能为家里的事操心。",
+      "福德":"你容易想太多，精神内耗是主要成本。学会「停下来」比「想明白」更管用。",
+      "父母":"和长辈之间容易有解不开的结，或者长辈让你牵挂。"
+    }
+  };
+
+  /* 四化性质 */
+  var HUA_NATURE = {
+    "禄":"资源在这一块流动得最顺，是你天然的加分项",
+    "权":"你会不自觉地在这里使劲、想拿主导权",
+    "科":"这一块容易带来口碑、认可，也和文书考试有关",
+    "忌":"这是你最放不下、也最容易卡住的地方"
+  };
+
+  /* ===================== 解读引擎 ===================== */
+  function getPair(x, y){ return PAIR_DB[x + "|" + y] || PAIR_DB[y + "|" + x] || null; }
+
+  function dimText(stars, dim){
+    var seen = {}, out = [];
+    stars.forEach(function(s){
+      var t = STAR_DB[s.name];
+      if(t && t[dim] && !seen[s.name]){ seen[s.name] = 1; out.push(t[dim]); }
+    });
+    return out.join(" ");
+  }
+
+  /* 三方四正的格局倾向 */
+  function detectGeZhi(a, soulIdx){
+    var set = {};
+    [0, 4, 6, 8].forEach(function(k){
+      a.palaces[(soulIdx + k) % 12].majorStars.forEach(function(s){ set[s.name] = 1; });
+    });
+    var cnt = function(){ return [].filter.call(arguments, function(n){ return set[n]; }).length; };
+    var has = function(){ return [].every.call(arguments, function(n){ return set[n]; }); };
+    if(cnt("七杀","破军","贪狼") >= 2) return { n:"杀破狼", t:"变动 · 开创", d:"三方四正会齐杀破狼，是典型的「先破后立」结构——人生靠一次次转折往上走，很难在同一个位置上待太久。" };
+    if(cnt("紫微","天府","武曲","天相") >= 3) return { n:"紫府武相", t:"稳健 · 整合", d:"三方四正会齐紫府武相，是抗周期能力最强的结构——擅长在既定规则里调动资源、稳住盘子。" };
+    if(cnt("天机","太阴","天同","天梁") >= 3) return { n:"机月同梁", t:"专业 · 协作", d:"三方四正会齐机月同梁，是「专业吃饭」的结构——靠本事和配合在体系内稳步上行，适合大平台。" };
+    if(has("太阳","巨门")) return { n:"巨日同宫", t:"表达 · 说服", d:"太阳巨门相会，是典型的「靠嘴和观点立身」结构——表达力、说服力、影响力是你的核心资产。" };
+    if(has("太阳","天梁")) return { n:"阳梁昌禄", t:"名声 · 庇护", d:"太阳天梁相会，是「有名有荫」的结构——容易获得信任与提携，适合走专业声望路线。" };
+    return null;
+  }
+
+  function buildReading(a){
+    var soulIdx = -1;
+    a.palaces.forEach(function(p, i){ if(p.name === "命宫") soulIdx = i; });
+    var soul = a.palaces[soulIdx];
+    var opp  = a.palaces[(soulIdx + 6) % 12];
+    var byName = {};
+    a.palaces.forEach(function(p){ byName[p.name] = p; });
+
+    var cards = [];
+
+    /* ---- 1. 命盘底色 ---- */
+    var borrowed = soul.majorStars.length === 0;
+    var core = borrowed ? opp.majorStars : soul.majorStars;
+    var coreNames = core.map(function(s){ return s.name; });
+
+    if(core.length){
+      var body = "";
+      var pk = coreNames.length >= 2 ? getPair(coreNames[0], coreNames[1]) : null;
+      if(pk) body += pk + "<br><br>";
+      body += dimText(core, "soul");
+      if(borrowed){
+        body = "<b>命宫无主星，借对宫" + palaceLabel(opp.name) + "的" + coreNames.join("、") +
+               "来看。</b>空宫不是坏事，意味着这个领域更灵活、更受环境塑造，但也更需要你自己主动去定义。<br><br>" + body;
+      }
+      /* 亮度修正 */
+      var weak = core.filter(function(s){ return BRIGHT_WEAK.indexOf(s.brightness) > -1; });
+      if(weak.length){
+        body += '<br><br><span class="warn">注意：' + weak.map(function(s){ return s.name; }).join("、") +
+                "落在陷位，力量打了折——这些特质不是没有，而是需要你主动去激活它。</span>";
+      }
+      /* 命宫四化 */
+      var soulMut = [];
+      core.forEach(function(s){ if(s.mutagen) soulMut.push(s.name + "化" + s.mutagen); });
+      if(soulMut.length){
+        body += '<br><br>命宫带<b>' + soulMut.join("、") + "</b>，这是先天最浓的一笔底色。";
+      }
+
+      var gz = detectGeZhi(a, soulIdx);
+      var keywords = core.map(function(s){ return STAR_DB[s.name] ? STAR_DB[s.name].role : ""; }).filter(Boolean);
+      cards.push({
+        title: "命盘底色 · 先天禀赋",
+        badge: coreNames.join(" · ") + (borrowed ? "（借宫）" : ""),
+        badgeCls: "p",
+        body: body,
+        note: gz ? ("格局倾向：<b>" + gz.n + "</b>（" + gz.t + "）——" + gz.d) : (keywords.length ? "星性：<b>" + keywords.join(" / ") + "</b>" : "")
+      });
+    }
+
+    /* ---- 2. 事业 ---- */
+    var career = byName["官禄"];
+    if(career){
+      var cb = "";
+      if(career.majorStars.length){
+        cb += dimText(career.majorStars, "career");
+        var cm = [];
+        career.majorStars.forEach(function(s){ if(s.mutagen) cm.push(s.name + "化" + s.mutagen); });
+        if(cm.length) cb += '<br><br>官禄宫带<b>' + cm.join("、") + "</b>，事业上的关键变量在这里。";
+      } else {
+        var co = a.palaces[(a.palaces.indexOf(career) + 6) % 12];
+        cb = "<b>官禄宫无主星，借对宫" + palaceLabel(co.name) + "的" +
+             (co.majorStars.map(function(s){ return s.name; }).join("、") || "杂曜") + "参看。</b><br><br>" +
+             dimText(co.majorStars, "career");
+      }
+      var bad = career.minorStars.concat(career.adjectiveStars).filter(function(s){ return s.type === "tough"; });
+      if(bad.length) cb += '<br><br><span class="warn">见' + bad.map(function(s){ return s.name; }).join("、") + "，事业路上少不了硬仗和反复，好处是抗压能力也被练出来了。</span>";
+      cards.push({ title: "事业方向", badge: palaceLabel("官禄") + " · " + (career.majorStars.map(function(s){ return s.name; }).join("") || "空宫"), badgeCls: "", body: cb });
+    }
+
+    /* ---- 3. 财运 ---- */
+    var wealth = byName["财帛"];
+    if(wealth){
+      var wb = "";
+      if(wealth.majorStars.length){
+        wb += dimText(wealth.majorStars, "wealth");
+        var wm = [];
+        wealth.majorStars.forEach(function(s){ if(s.mutagen) wm.push(s.name + "化" + s.mutagen); });
+        if(wm.length) wb += '<br><br>财帛宫带<b>' + wm.join("、") + "</b>。";
+      } else {
+        var wo = a.palaces[(a.palaces.indexOf(wealth) + 6) % 12];
+        wb = "<b>财帛宫无主星，借对宫" + palaceLabel(wo.name) + "的" +
+             (wo.majorStars.map(function(s){ return s.name; }).join("、") || "杂曜") + "参看。</b><br><br>" +
+             dimText(wo.majorStars, "wealth");
+      }
+      cards.push({ title: "财运模式", badge: palaceLabel("财帛") + " · " + (wealth.majorStars.map(function(s){ return s.name; }).join("") || "空宫"), badgeCls: "", body: wb });
+    }
+
+    /* ---- 4. 感情 ---- */
+    var love = byName["夫妻"];
+    if(love){
+      var lb = "";
+      if(love.majorStars.length){
+        lb += dimText(love.majorStars, "love");
+        var lm = [];
+        love.majorStars.forEach(function(s){ if(s.mutagen) lm.push(s.name + "化" + s.mutagen); });
+        if(lm.length) lb += '<br><br>夫妻宫带<b>' + lm.join("、") + "</b>，感情里最需要留意的地方。";
+      } else {
+        var lo = a.palaces[(a.palaces.indexOf(love) + 6) % 12];
+        lb = "<b>夫妻宫无主星，借对宫" + palaceLabel(lo.name) + "的" +
+             (lo.majorStars.map(function(s){ return s.name; }).join("、") || "杂曜") + "参看。</b><br><br>" +
+             dimText(lo.majorStars, "love");
+      }
+      cards.push({ title: "感情缘分", badge: palaceLabel("夫妻") + " · " + (love.majorStars.map(function(s){ return s.name; }).join("") || "空宫"), badgeCls: "", body: lb });
+    }
+
+    /* ---- 5. 四化与着力点 ---- */
+    function huaDetail(m){
+      var brief = STAR_BRIEF[m.star] || "一颗重要的星";
+      var mean  = PALACE_MEAN[m.pal] || "";
+      var spec  = (HUA_IN_PALACE[m.hua] && HUA_IN_PALACE[m.hua][m.pal]) || (HUA_NATURE[m.hua] + "。");
+      return '<div class="hua-item">' +
+        '<div class="hua-t"><b>' + m.star + "化" + m.hua + "</b><span>" + palaceLabel(m.pal) + "</span></div>" +
+        '<div class="hua-b">' + m.star + "是" + brief + "，" + palaceLabel(m.pal) + "管" + mean +
+        "。化" + m.hua + "意味着" + HUA_NATURE[m.hua] + "——" + spec + "</div></div>";
+    }
+
+    /* 生年四化 */
+    var mh = [];
+    a.palaces.forEach(function(p){
+      p.majorStars.concat(p.minorStars).forEach(function(s){
+        if(s.mutagen) mh.push({ star: s.name, hua: s.mutagen, pal: p.name });
+      });
+    });
+
+    /* 流年四化：当年天干带来的额外变量 */
+    var lyHua = [];
+    var horo2 = null;
+    try{ horo2 = a.horoscope(new Date().getFullYear() + "-06-01"); }catch(e){}
+    if(horo2 && horo2.yearly && horo2.yearly.mutagen){
+      var HN = ["禄","权","科","忌"];
+      horo2.yearly.mutagen.forEach(function(sn, i){
+        a.palaces.forEach(function(p){
+          p.majorStars.concat(p.minorStars).forEach(function(s){
+            if(s.name === sn) lyHua.push({ star: sn, hua: HN[i], pal: p.name });
+          });
+        });
+      });
+    }
+
+    if(mh.length || lyHua.length){
+      var mb = "";
+      if(mh.length){
+        mb += '<div class="hua-sec">生年四化 · 先天的四个着力点</div>' + mh.map(huaDetail).join("");
+      }
+      if(lyHua.length){
+        mb += '<div class="hua-sec">' + new Date().getFullYear() + " 流年四化 · 今年额外加进来的变量</div>" +
+              lyHua.map(huaDetail).join("");
+      }
+      cards.push({
+        title: "四化着力点",
+        badge: "生年 " + mh.length + " 条 · 流年 " + lyHua.length + " 条",
+        badgeCls: "", body: mb
+      });
+    }
+
+    return cards;
+  }
+
+  function renderReadings(a){
+    var box = $("readings");
+    var cards = buildReading(a);
+    var html = cards.map(function(c){
+      return '<div class="glass rd"><div class="rd-head"><span class="rd-title">' + c.title +
+        '</span><span class="rd-badge ' + (c.badgeCls || "") + '">' + c.badge + "</span></div>" +
+        '<div class="rd-body">' + c.body + "</div>" +
+        (c.note ? '<div class="rd-note">' + c.note + "</div>" : "") + "</div>";
+    }).join("");
+    html += '<div class="rd-disc">解读是概率地图，不是判决书。初始准确度约 65–75%，' +
+            "结合你自己的实际情况对照，才推得动剩下的部分。</div>";
+    box.innerHTML = html;
+  }
+
+  /* ===================== 命盘评价 ===================== */
+  var TIERS = [
+    { min: 80, label: "夯爆了",     cls: "t0", line: "先天结构很硬，起手牌就比大多数人好。该抓的机会别犹豫。" },
+    { min: 68, label: "人上人",     cls: "t1", line: "底子扎实、主线清晰，属于走得动也走得远的盘。" },
+    { min: 52, label: "可以可以",   cls: "t2", line: "中上水准，有亮点也有要补的地方，后天怎么用很关键。" },
+    { min: -1, label: "普通",       cls: "t3", line: "先天牌面不算突出，但这不是决定性的——命盘只管一半。" }
+  ];
+
+  var KEY_PALACES = ["命宫","财帛","官禄","夫妻"];
+
+  function evaluate(a){
+    var soulIdx = -1;
+    a.palaces.forEach(function(p, i){ if(p.name === "命宫") soulIdx = i; });
+    var soul = a.palaces[soulIdx];
+    var opp  = a.palaces[(soulIdx + 6) % 12];
+    var core = soul.majorStars.length ? soul.majorStars : opp.majorStars;
+    var s4 = [0, 4, 6, 8].map(function(k){ return a.palaces[(soulIdx + k) % 12]; });
+
+    var why = [], score = 0;
+
+    /* 1. 命宫星力 0–30 */
+    var p1;
+    if(!core.length){
+      p1 = 14;
+      why.push("命宫无主星，要借对宫的力量——起点不算强，但可塑性强。");
+    } else {
+      p1 = 18;
+      core.forEach(function(s){
+        if(STRONG.indexOf(s.brightness) > -1) p1 += 7;
+        else if(["得","利"].indexOf(s.brightness) > -1) p1 += 3;
+        else if(WEAK.indexOf(s.brightness) > -1) p1 -= 5;
+      });
+      var bright = core.map(function(s){ return s.name + (s.brightness || ""); }).join("、");
+      var hasGood = core.some(function(s){ return STRONG.indexOf(s.brightness) > -1; });
+      var hasWeak = core.some(function(s){ return WEAK.indexOf(s.brightness) > -1; });
+      if(hasGood) why.push("命宫" + bright + "，星坐庙旺，先天星力足。");
+      else if(hasWeak) why.push("命宫" + bright + "，星落陷位，力量要靠后天主动激活。");
+      else why.push("命宫" + bright + "，星力中平。");
+    }
+    p1 = Math.max(0, Math.min(30, p1));
+    score += p1;
+
+    /* 2. 吉星助力 0–25 */
+    var lucky = [];
+    s4.forEach(function(p){
+      p.minorStars.concat(p.adjectiveStars).forEach(function(s){
+        if((s.type === "soft" || s.type === "lucun" || s.type === "tianma") && lucky.indexOf(s.name) < 0) lucky.push(s.name);
+      });
+    });
+    score += Math.min(24, lucky.length * 4);
+    if(lucky.length) why.push("三方四正会" + lucky.join("、") + "，手上有助力可用。");
+    else why.push("三方四正吉星不多，多半得靠自己。");
+
+    /* 3. 煞星干扰 0–25 */
+    var bad = [];
+    s4.forEach(function(p){
+      p.minorStars.concat(p.adjectiveStars).forEach(function(s){
+        if(s.type === "tough" && bad.indexOf(s.name) < 0) bad.push(s.name);
+      });
+    });
+    score += Math.max(6, 24 - bad.length * 4);
+    if(bad.length) why.push("三方见" + bad.join("、") + "，路上有硬仗——抗压能力也是这么练出来的。");
+    else why.push("三方不见煞星，路走得顺。");
+
+    /* 4. 四化落点 0–20 */
+    var p4 = 12, huaGood = [], huaBad = [];
+    a.palaces.forEach(function(p){
+      p.majorStars.concat(p.minorStars).forEach(function(s){
+        if(!s.mutagen) return;
+        var isKey = KEY_PALACES.indexOf(p.name) > -1;
+        if(s.mutagen === "忌"){ if(isKey){ p4 -= 4; huaBad.push(s.name + "化忌落" + palaceLabel(p.name)); } }
+        else if(isKey){ p4 += 4; huaGood.push(s.name + "化" + s.mutagen); }
+      });
+    });
+    score += Math.max(4, Math.min(22, p4));
+    if(huaGood.length) why.push("生年" + huaGood.join("、") + "落在关键宫位，资源往你这边倾斜。");
+    if(huaBad.length) why.push(huaBad.join("、") + "，这是先天得花力气处理的课题。");
+
+    score = Math.max(0, Math.min(100, Math.round(score)));
+    var tier = TIERS.filter(function(t){ return score >= t.min; })[0];
+    return { score: score, tier: tier, why: why.slice(0, 4) };
+  }
+
+  function renderVerdict(a){
+    var v = evaluate(a);
+    var el = $("verdict");
+    var long = v.tier.label.length >= 4;
+    el.className = "glass verdict on";
+    el.innerHTML =
+      '<div class="vd-label">命 盘 评 价</div>' +
+      '<div class="vd-main ' + v.tier.cls + (long ? " long" : "") + '">' + v.tier.label + "</div>" +
+      '<div class="vd-score"><b>' + v.score + "</b> / 100</div>" +
+      '<div class="vd-bar"><i style="width:' + v.score + '%"></i></div>' +
+      '<div class="vd-why">' + v.why.map(function(w){ return "· " + w; }).join("<br>") + "</div>" +
+      '<div class="vd-line">' + v.tier.line + "</div>" +
+      '<button class="vd-again" id="again" type="button">改一下生辰</button>';
+
+    $("again").addEventListener("click", function(){
+      $("formWrap").style.display = "";
+      el.className = "glass verdict";
+      el.innerHTML = "";
+      $("result").classList.remove("on");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+
+  /* ---- 起盘 ---- */
+  $("form").addEventListener("submit", function(e){
+    e.preventDefault();
+    var errEl = $("err"); errEl.style.display = "none";
+    try{
+      var raw = $("date").value;
+      if(!raw) throw new Error("请选择出生日期");
+      var p = raw.split("-");
+      var ds = p[0] + "-" + (+p[1]) + "-" + (+p[2]);   /* iztro 不要求补零 */
+      var ti = +hourSel.value, gd = $("gender").value, leap = $("leap").checked;
+
+      var a = (CAL === "solar")
+        ? iztro.astro.bySolar(ds, ti, gd, true, "zh-CN")
+        : iztro.astro.byLunar(ds, ti, gd, leap, true, "zh-CN");
+
+      render(a);
+      $("result").classList.add("on");
+      setTimeout(function(){
+        var v = $("verdict");
+        var target = (v && v.className.indexOf("on") > -1) ? v : $("result");
+        target.scrollIntoView({behavior:"smooth", block:"start"});
+      }, 80);
+    }catch(err){
+      errEl.textContent = err.message || String(err);
+      errEl.style.display = "block";
+    }
+  });
+
+  /* ---- 渲染 ---- */
+  function render(a){
+    var chart = $("chart");
+    chart.innerHTML = "";
+
+    var nowYear = new Date().getFullYear();
+    var horo = null;
+    try{ horo = a.horoscope(nowYear + "-06-01"); }catch(e){}
+
+    /* 流年命宫所在宫位索引 */
+    var liunianIdx = -1;
+    if(horo && horo.yearly && horo.yearly.palaceNames){
+      liunianIdx = horo.yearly.palaceNames.indexOf("命宫");
+    }
+
+    a.palaces.forEach(function(pal, i){
+      var pos = GRID[pal.earthlyBranch] || [1,1];
+      var d = document.createElement("div");
+      d.className = "palace";
+      d.style.gridRow = pos[0]; d.style.gridColumn = pos[1];
+      if(pal.name === "命宫") d.classList.add("ming");
+      if(i === liunianIdx) d.classList.add("liunian");
+
+      var stars = pal.majorStars.concat(pal.minorStars, pal.adjectiveStars);
+      var hasMajor = pal.majorStars.length > 0;
+      if(!hasMajor) d.classList.add("empty");
+
+      var h = '<div class="p-head"><span class="pname">' + palaceLabel(pal.name) +
+              (pal.isBodyPalace ? '<span class="body-tag"> 身</span>' : "") +
+              '</span><span class="pganzhi">' + pal.heavenlyStem + pal.earthlyBranch + "</span></div>";
+      h += '<div class="p-stars">' +
+           (hasMajor ? "" : '<span class="empty-tag">空宫</span>') +
+           (stars.length ? stars.map(starHTML).join("") : "") + "</div>";
+      h += '<div class="p-foot"><span class="dec"><i>大限</i>' + pal.decadal.range[0] + "-" + pal.decadal.range[1] +
+           '</span><span class="cs">' + (pal.changsheng12 || "") + "</span></div>";
+      if(i === liunianIdx) h += '<span class="ln-tag">流年</span>';
+      d.innerHTML = h;
+      chart.appendChild(d);
+    });
+
+    /* 中宫 */
+    var c = document.createElement("div");
+    c.className = "center";
+    var hua = "";
+    if(horo && horo.yearly && horo.yearly.mutagen){
+      var names = ["禄","权","科","忌"];
+      hua = '<div class="c-ln">' + nowYear + " " + horo.yearly.heavenlyStem + horo.yearly.earthlyBranch +
+            "年 · 流年落" + horo.yearly.earthlyBranch + "宫</div>" +
+            '<div class="c-hua">' + horo.yearly.mutagen.map(function(s, k){
+              return "<span>流年" + names[k] + " · " + s + "</span>";
+            }).join("") + "</div>";
+    }
+    c.innerHTML =
+      '<div class="c-title">' + a.fiveElementsClass + "</div>" +
+      '<div class="c-sub">' + a.solarDate + " · " + a.lunarDate + "<br>" + a.time + " · " + a.gender + "</div>" +
+      '<div class="c-grid">' +
+        "<div><span>命主</span><b>" + a.soul + "</b></div>" +
+        "<div><span>身主</span><b>" + a.body + "</b></div>" +
+        "<div><span>生肖</span><b>" + a.zodiac + "</b></div>" +
+        "<div><span>星座</span><b>" + a.sign + "</b></div>" +
+        "<div><span>命宫</span><b>" + a.earthlyBranchOfSoulPalace + "</b></div>" +
+        "<div><span>身宫</span><b>" + a.earthlyBranchOfBodyPalace + "</b></div>" +
+      "</div>" + hua;
+    chart.appendChild(c);
+
+    renderReadings(a);
+    renderVerdict(a);
+    $("formWrap").style.display = "none";
+  }
+
+  /* 默认填一个示例日期，方便直接体验 */
+  $("date").value = "1991-08-15";
+
+  /* ---- URL 参数：可直接分享一条能出盘的链接 ---- */
+  (function(){
+    var q = new URLSearchParams(location.search);
+    if(!q.get("d")) return;
+    var dp = String(q.get("d")).split("-");
+    $("date").value = (dp.length === 3)
+      ? dp[0] + "-" + ("0" + dp[1]).slice(-2) + "-" + ("0" + dp[2]).slice(-2)
+      : q.get("d");
+    if(q.get("h") !== null) hourSel.value = q.get("h");
+    hourSel.dispatchEvent(new Event("change"));
+    if(q.get("g")) $("gender").value = q.get("g");
+    if(q.get("cal") === "lunar"){
+      CAL = "lunar";
+      var bs = document.querySelectorAll("#seg button");
+      bs[0].classList.remove("on"); bs[1].classList.add("on");
+      $("leapRow").style.display = "flex";
+    }
+    $("form").requestSubmit();
+  })();
+})();
+
+/* ---- 添加到主屏幕（PWA）---- */
+(function(){
+  var ICON = "data:image/png;base64,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";
+  try{
+    ["icon", "apple-touch-icon"].forEach(function(rel){
+      var l = document.createElement("link");
+      l.rel = rel; l.href = ICON;
+      document.head.appendChild(l);
+    });
+    var mf = {
+      name: "紫微斗数排盘",
+      short_name: "紫微斗数",
+      description: "紫微斗数排盘与命盘解读",
+      start_url: ".",
+      scope: ".",
+      display: "standalone",
+      orientation: "portrait",
+      background_color: "#f7f4ff",
+      theme_color: "#f7f4ff",
+      icons: [
+        { src: ICON, sizes: "256x256", type: "image/png", purpose: "any" },
+        { src: ICON, sizes: "256x256", type: "image/png", purpose: "maskable" }
+      ]
+    };
+    var lk = document.createElement("link");
+    lk.rel = "manifest";
+    lk.href = URL.createObjectURL(new Blob([JSON.stringify(mf)], {type: "application/manifest+json"}));
+    document.head.appendChild(lk);
+  }catch(e){}
+})();
+</script>
+</body>
+</html>
